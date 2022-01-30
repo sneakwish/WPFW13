@@ -1,0 +1,154 @@
+@model IEnumerable<WPFW13.Models.Student>
+
+@{
+    @* Layout = null; *@
+}
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+
+</head>
+
+<body>
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Naam</th>
+            <th>Leeftijd</th>
+            <th>crud</th>
+        </tr>
+        <tbody id="tableBody"></tbody>
+    </table>
+    <h4>Toevoegen:</h4>
+    <label>Naam:</label>
+    <input type="text" id="naam"  value="" />
+    <label>leeftijd</label>
+    <input type="text" id="leeftijd"  value="" />
+    <button class="btn btn-primary" onclick="addItem();">Toevoegen</button>
+
+    <script>
+        const naam2 = document.getElementById('naam');
+        const leeftijd2 = document.getElementById('leeftijd');
+        function addItem() {
+
+            const item = {
+                Naam: naam2.value,
+                Leeftijd: leeftijd2.value
+            };
+
+            fetch('/api/StudentControllerAPI', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(item)
+            })
+                .then(response => response.json()
+                    .then(() => getItems()))
+
+                .catch(error => (alert(error)));
+        }
+
+        let todos = [];
+
+        function getItems() {
+            let tBody = document.getElementById('tableBody');
+            tBody.innerHTML = '';
+            fetch("/api/StudentControllerAPI")
+                .then(response => response.json())
+                .then(studenten => {
+                    console.log(studenten);
+                    for (let student of studenten) {
+
+                        let idField = document.createElement('input');
+                        idField.type = 'text';
+                        idField.value = student.studentId;
+                        idField.setAttribute('id', idField.value);
+
+
+                        let naamField = document.createElement('input');
+                        naamField.type = 'text';
+                        naamField.value = student.naam;
+                        naamField.setAttribute('id', "naam" + idField.value);
+
+                        let leeftijdField = document.createElement('input');
+                        leeftijdField.type = 'text';
+                        leeftijdField.value = student.leeftijd;
+                        leeftijdField.setAttribute('id', "leeftijd" + idField.value);
+
+
+                        let tr = tBody.insertRow();
+
+                        let td1 = tr.insertCell(0);
+                        td1.appendChild(idField);
+
+                        let td2 = tr.insertCell(1);
+                        td2.appendChild(naamField);
+
+                        let td3 = tr.insertCell(2);
+                        td3.appendChild(leeftijdField);
+
+
+                        let deleteKnop = document.createElement('button');
+                        deleteKnop.setAttribute('id', idField.value);
+                        deleteKnop.setAttribute("onClick", "javascript: deleteItem(" + idField.value + ");");
+                        deleteKnop.innerText = "Delete";
+
+
+                        let updateKnop = document.createElement('button');
+                        updateKnop.setAttribute('id', idField.value);
+                        updateKnop.setAttribute("onClick", "javascript: updateItem(" + idField.value + ");");
+
+                        updateKnop.innerText = "update";
+
+                        let td4 = tr.insertCell(3);
+                        td4.appendChild(deleteKnop);
+                        td4.appendChild(updateKnop);
+                    }
+                })
+                .catch(error => console.error('Unable to get items.', error));
+        }
+
+        function deleteItem(id) {
+            fetch("/api/StudentControllerAPI/" + id, {
+                method: 'DELETE',
+            })
+                .then(() => getItems())
+                .catch(error => console.error('Unable to delete item.', error));
+        }
+
+        function updateItem(id) {
+            const item = {
+                studentId: id,
+                naam: document.getElementById('naam' + id).value,
+                leeftijd: document.getElementById('leeftijd' + id).value
+            };
+            fetch("/api/StudentControllerAPI/" + id, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(item)
+            })
+                .then(() => getItems())
+                .catch(error => console.error('Unable to update item.', error));
+        }
+
+    </script>
+    <script>getItems();</script>
+
+
+</body>
+
+</html>
